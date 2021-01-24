@@ -26,7 +26,7 @@ public class TimeLimitCountdown extends MatchCountdown {
   protected final TimeLimit timeLimit;
 
   public TimeLimitCountdown(Match match, TimeLimit timeLimit) {
-    super(match, BossBar.Color.BLUE);
+    super(match);
     this.timeLimit = timeLimit;
   }
 
@@ -76,6 +76,18 @@ public class TimeLimitCountdown extends MatchCountdown {
     }
   }
 
+  @Nullable
+  protected BossBar.Color barColor() {
+    long seconds = remaining.getSeconds();
+    if (seconds > 60) {
+      return BossBar.Color.GREEN;
+    } else if (seconds > 30) {
+      return BossBar.Color.YELLOW;
+    } else {
+      return BossBar.Color.RED;
+    }
+  }
+
   protected void freeze(Duration remaining) {
     this.remaining = remaining;
     hideBossBar();
@@ -88,11 +100,12 @@ public class TimeLimitCountdown extends MatchCountdown {
   @Override
   public void onEnd(Duration total) {
     super.onEnd(total);
+    TimeLimitMatchModule tl = this.getMatch().needModule(TimeLimitMatchModule.class);
     if (mayEnd()) {
+      tl.setFinished(true);
       this.getMatch().calculateVictory();
     } else {
-      TimeLimitMatchModule tl = this.getMatch().getModule(TimeLimitMatchModule.class);
-      if (tl != null) tl.startOvertime();
+      tl.startOvertime();
     }
     this.freeze(Duration.ZERO);
   }
